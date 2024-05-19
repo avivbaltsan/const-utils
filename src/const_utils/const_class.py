@@ -3,7 +3,7 @@ import importlib
 import inspect
 from typing import Dict
 
-from src.const_utils.utility_funcs import is_const
+from .utility_funcs import is_const
 
 
 class ConstClassMeta(type):
@@ -131,6 +131,3 @@ class BaseConstClass(metaclass=ConstClassMeta):
     to create a Constant Class using inheritance.
     """
     pass
-
-
-__all__ = ['ConstClassMeta', 'BaseConstClass']
