@@ -50,12 +50,8 @@ class ConstClassMeta(type):
 
     def __setattr__(cls, name, value):
         """Hook the creation of a new class attribute by
-        checking if the newly created attribute is a constant,
-        and if so adding it to the class constant cache.
-
-        If a class attribute is changed to a non-constant
-        value, remove the attribute name from the class
-        cache.
+        checking if the newly created attribute is a constant.
+        If so, add it to the class constant cache.
         """
         super().__setattr__(name, value)
         class_constants = ConstClassMeta._class_constant_cache[cls]
@@ -82,12 +78,12 @@ class ConstClassMeta(type):
 
     @property
     def const_names(cls):
-        """Return a list of all constant names"""
+        """Return a list of all constant names."""
         return list(cls.as_dict())
 
     @property
     def const_values(cls):
-        """Return a list of all constant values"""
+        """Return a list of all constant values."""
         return list(cls.as_dict().values())
 
     def __apply(cls, namespace, override, f_assign):
@@ -114,12 +110,11 @@ class ConstClassMeta(type):
         which this method is called.
 
         If `local` is set to `True`, the values are
-        saved to the local namespace_callable instead of the
+        saved to the local namespace instead of the
         global. If `override` is set to `True`,
-        constants defined under this class that have
-        names that already exist as attributes of
-        the calling namespace_callable will override the
-        existing attributes.
+        constants defined under this class that
+        share names with attributes of the calling
+        namespace will override the namespace's value.
         """
         current_frame = inspect.currentframe()
         if current_frame is None:
