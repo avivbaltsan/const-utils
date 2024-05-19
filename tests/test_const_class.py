@@ -1,6 +1,7 @@
-import pytest
 import sys
 import types
+
+import pytest
 
 from src.const_utils.const_class import ConstClassMeta
 

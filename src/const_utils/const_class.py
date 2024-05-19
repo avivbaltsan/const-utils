@@ -3,7 +3,7 @@ import importlib
 import inspect
 from typing import Dict
 
-from src.const_utils.utils import is_const
+from src.const_utils.utility_funcs import is_const
 
 
 class ConstClassMeta(type):
@@ -121,10 +121,7 @@ class ConstClassMeta(type):
             raise RuntimeError('Cannot retrieve current frame')
 
         caller_frame = current_frame.f_back
-        if local:
-            namespace = caller_frame.f_locals
-        else:
-            namespace = caller_frame.f_globals
+        namespace = caller_frame.f_locals if local else caller_frame.f_globals
 
         cls.__apply(namespace, override, namespace.__setitem__)
 
