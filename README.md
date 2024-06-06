@@ -18,7 +18,7 @@ class CountryConsts(BaseConstClass):
 
 ### Access options
 #### Access from the class itself
-```
+```python
 >>> CountryConsts.as_dict()  # {'US': 'United States of America', 'UK': 'United Kingdom'}
 >>> CountryConsts['US']  # 'United States of America
 >>> Country.const_names  # ['US, 'UK']
@@ -26,14 +26,14 @@ class CountryConsts(BaseConstClass):
 ```
 
 #### Access global/local constants
-```
+```python
 >>> # Access current global/local constants (depends on kwarg `local`)
 >>> # as a dictionary of names to values
 >>> access_namespace_consts(local=False)
 ```
 
 ### Storing class constants to a namespace
-```
+```python
 >>> # Store constants in a module
 >>> CountryConsts.apply_to_module('some_module_name', override=True)
 >>> # Store constants in as globals
