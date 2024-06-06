@@ -1,7 +1,8 @@
 """Definition of 'Const Classes'"""
+
 import importlib
 import inspect
-from typing import Dict
+from typing import Callable, Dict
 
 from .utility_funcs import is_const
 
@@ -10,6 +11,11 @@ class ConstClassMeta(type):
     """Metaclass that allows for the creation of a
     `ConstClass`: a class with added utilities
     for handling class-attribute constants.
+
+    Constants are defaultly identified using the
+    `is_const` function. This can be modified by
+    providing a value to the key-word argument
+    `constant_idnetifier`.
 
     Example:
         >>> class MathConsts(metaclass=ConstClassMeta):
@@ -22,18 +28,40 @@ class ConstClassMeta(type):
         >>> MathConsts.as_dict()  # returns {'PI': 3.14159, 'E': 2.71828, 'NA': 6.022...}
         >>> MathConsts.apply()  # Apply the constants to the global namespace_callable
 
+    Custom constant identifier:
+        >>> class MathConstsWithCustomConsts(
+        ...     metaclass=ConstClassMeta,
+        ...     constant_identifier=lambda s: s.identifier() and s.islower()
+        ... ):
+        ...     pi = 3.14159
+        ...     e = 2.71828
+
     For standard creation of Const Classes,
     using `BaseConstClass` is preferred.
     """
 
     _class_constant_cache: Dict[object, set] = {}
+    _is_const: Callable[[str], bool] = None
 
-    def __new__(cls, *args, **kwargs):
+    def __new__(cls, name, bases, dct, *, constant_identifier: Callable[[str], bool] = None):
         """Register an instance of the metaclass and its
         constant attributes to the class constant cache.
+
+        Args:
+            constant_identifier: A callable for determining
+                                the definition of a constant.
+                                When `None` is given as input
+                                (default value), `is_const`
+                                is used.
         """
-        const_class = super().__new__(cls, *args, **kwargs)
-        constants = {name for name in dir(const_class) if is_const(name)}
+        const_class = super().__new__(cls, name, bases, dct)
+
+        if constant_identifier is None:
+            cls._is_const = is_const
+        else:
+            cls._is_const = constant_identifier
+
+        constants = {name for name in dir(const_class) if cls._is_const(name)}
         cls._class_constant_cache[const_class] = constants
         return const_class
 

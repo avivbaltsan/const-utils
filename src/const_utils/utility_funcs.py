@@ -1,4 +1,5 @@
 """Constant-related utility functions"""
+
 import inspect
 from typing import Any, Dict
 

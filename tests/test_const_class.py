@@ -16,6 +16,19 @@ def sample_const_class():
 
 
 @pytest.fixture
+def custom_identifier_const_class():
+    def custom_identifier(s: str) -> bool:
+        return s.isidentifier() and s.islower() and not s.startswith('_')
+
+    class MathConstsLowercase(metaclass=ConstClassMeta, constant_identifier=custom_identifier):
+        pi = 3.14159
+        e = 2.71828
+        na = 6.0221408e+23
+
+    return MathConstsLowercase
+
+
+@pytest.fixture
 def sample_const_class2():
     class PythonKeywords(metaclass=ConstClassMeta):
         FUNC_DEFINITION = 'def'
@@ -42,6 +55,15 @@ def test_const_class_cache(sample_const_class, sample_const_class2):
     }
     assert ConstClassMeta._class_constant_cache[sample_const_class] == expected_cache[sample_const_class]
     assert ConstClassMeta._class_constant_cache[sample_const_class2] == expected_cache[sample_const_class2]
+
+
+def test_cache_with_custom_constant_identifier(custom_identifier_const_class):
+    expected_dict = {
+        'pi': 3.14159,
+        'e': 2.71828,
+        'na': 6.0221408e+23,
+    }
+    assert custom_identifier_const_class.as_dict() == expected_dict
 
 
 def test_as_dict(sample_const_class):
@@ -83,7 +105,7 @@ def test_applying_to_current_namespace(is_local, sample_const_class):
     f_namespace = locals if is_local else globals
 
     def inner_scope():
-        # Override a single value to test `override`
+        # Override a single value to test `override` argument
         f_namespace().update({'PI': None})
         # Update global/local namespace
         sample_const_class.apply(is_local, override=True)
