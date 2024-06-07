@@ -2,7 +2,7 @@
 
 import importlib
 import inspect
-from typing import Callable, Dict
+from typing import Any, Callable, Dict, List, Union
 
 from .utility_funcs import is_const
 
@@ -41,9 +41,16 @@ class ConstClassMeta(type):
     """
 
     _class_constant_cache: Dict[object, set] = {}
-    _is_const: Callable[[str], bool] = None
+    _is_const: Union[None, Callable[[str], bool]] = None
 
-    def __new__(cls, name, bases, dct, *, constant_identifier: Callable[[str], bool] = None):
+    def __new__(
+        cls,
+        name: str,
+        bases: tuple,
+        dct: dict,
+        *,
+        constant_identifier: Callable[[str], bool] = is_const
+    ) -> 'ConstClassMeta':
         """Register an instance of the metaclass and its
         constant attributes to the class constant cache.
 
@@ -65,7 +72,7 @@ class ConstClassMeta(type):
         cls._class_constant_cache[const_class] = constants
         return const_class
 
-    def __getitem__(cls, item):
+    def __getitem__(cls, item: str) -> Any:
         """Utility for accessing constant value by its name."""
         class_constants = ConstClassMeta._class_constant_cache[cls]
         if item in class_constants:
@@ -76,7 +83,7 @@ class ConstClassMeta(type):
                              f'contain a constant named {item}. '
                              f'Existing constants are {available}')
 
-    def __setattr__(cls, name, value):
+    def __setattr__(cls, name: str, value: Any) -> None:
         """Hook the creation of a new class attribute by
         checking if the newly created attribute is a constant.
         If so, add it to the class constant cache.
@@ -87,7 +94,7 @@ class ConstClassMeta(type):
         if is_const(name) and name not in class_constants:
             class_constants.add(name)
 
-    def __delattr__(cls, name):
+    def __delattr__(cls, name: str) -> None:
         """Hook the deletion of a class attribute by
         checking if the deleted attribute is a constant,
         and if so remove it from the class constant cache.
@@ -97,31 +104,43 @@ class ConstClassMeta(type):
         if name in class_constants:
             class_constants.remove(name)
 
-    def as_dict(cls):
+    def as_dict(cls) -> Dict[str, Any]:
         """Return a dictionary representation of the
         constants within the class.
         """
         class_constants = ConstClassMeta._class_constant_cache[cls]
-        return {const_name: getattr(cls, const_name) for const_name in class_constants}
+        return {
+            const_name: getattr(cls, const_name)
+            for const_name in class_constants
+        }
 
     @property
-    def const_names(cls):
+    def const_names(cls) -> List[str]:
         """Return a list of all constant names."""
         return list(cls.as_dict())
 
     @property
-    def const_values(cls):
+    def const_values(cls) -> List[Any]:
         """Return a list of all constant values."""
         return list(cls.as_dict().values())
 
-    def __apply(cls, namespace, override, f_assign):
+    def __apply(
+            cls,
+            namespace: Any,
+            override: bool,
+            f_assign: Callable[[str, Any], None]
+    ) -> None:
         for name in ConstClassMeta._class_constant_cache[cls]:
             value = getattr(cls, name)
             if not override and hasattr(namespace, name):
                 continue
             f_assign(name, value)
 
-    def apply_to_module(cls, module_name, override=False):
+    def apply_to_module(
+        cls,
+        module_name: str,
+        override: bool = False
+    ) -> None:
         """Save the constants defined under the class
         to the given module (notated by its name),
         represented as string. To alter the current module,
@@ -132,7 +151,11 @@ class ConstClassMeta(type):
         module = importlib.import_module(module_name)
         cls.__apply(module, override, module.__setattr__)
 
-    def apply(cls, local=False, override=False):
+    def apply(
+            cls,
+            local: bool = False,
+            override: bool = False
+    ) -> None:
         """Save the constants defined under the class
         to the global namespace of the scope from
         which this method is called.
@@ -145,7 +168,7 @@ class ConstClassMeta(type):
         namespace will override the namespace's value.
         """
         current_frame = inspect.currentframe()
-        if current_frame is None:
+        if current_frame is None or current_frame.f_back is None:
             raise RuntimeError('Cannot retrieve current frame')
 
         caller_frame = current_frame.f_back

@@ -1,7 +1,7 @@
-"""Constant-related utility functions"""
+"""Constant-related utility functions."""
 
 import inspect
-from typing import Any, Dict
+from typing import Any, Dict, Callable
 
 
 def is_const(name: str) -> bool:
@@ -14,19 +14,26 @@ def is_const(name: str) -> bool:
     return name.isidentifier() and name.isupper() and not name.startswith('_')
 
 
-def access_namespace_consts(local=False) -> Dict[str, Any]:
+def access_namespace_consts(
+    constant_identifier: Callable[[str], bool] = is_const,
+    local: bool = False,
+) -> Dict[str, Any]:
     """Access all constants within the caller namespace.
-    A constant is any attribute name for which `is_const()`
-    is True.
+    A constant is any attribute name for which
+    `constant_identifier(<attribute>)` is True.
 
     If `local` is True, constants are scanned over `locals()`
     instead of `globals()`.
     """
     current_frame = inspect.currentframe()
-    if current_frame is None:
-        raise RuntimeError('Cannot retrieve current frame')
+    if current_frame is None or current_frame.f_back is None:
+        raise RuntimeError('Cannot retrieve stack frames')
 
     caller_frame = current_frame.f_back
     namespace = caller_frame.f_locals if local else caller_frame.f_globals
 
-    return {name: value for name, value in namespace.items() if is_const(name)}
+    return {
+        name: value
+        for name, value in namespace.items()
+        if constant_identifier(name)
+    }
