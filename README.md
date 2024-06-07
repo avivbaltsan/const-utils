@@ -36,7 +36,7 @@ class CountryConsts(BaseConstClass):
 ```python
 >>> # Store constants in a module
 >>> CountryConsts.apply_to_module('some_module_name', override=True)
->>> # Store constants in as globals
+>>> # Store constants as globals
 >>> CountryConsts.apply()
 >>> # Store constants as locals
 >>> CountryConsts.apply(local=True)
