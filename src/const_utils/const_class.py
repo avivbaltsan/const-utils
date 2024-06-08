@@ -2,9 +2,11 @@
 
 import importlib
 import inspect
-from typing import Any, Callable, Dict, List, Union
+from typing import Any, Callable, Dict, List, Set, TypeVar
 
 from .utility_funcs import is_const
+
+T = TypeVar('T', covariant=True)
 
 
 class ConstClassMeta(type):
@@ -40,8 +42,8 @@ class ConstClassMeta(type):
     using `BaseConstClass` is preferred.
     """
 
-    _class_constant_cache: Dict[object, set] = {}
-    _is_const: Union[None, Callable[[str], bool]] = None
+    _class_constant_cache: Dict['ConstClassMeta', Set[str]] = {}
+    _class_function_cache: Dict['ConstClassMeta', Callable[[str], bool]] = {}
 
     def __new__(
         cls,
@@ -57,23 +59,36 @@ class ConstClassMeta(type):
         Args:
             constant_identifier: A callable for determining
                                 the definition of a constant.
-                                When `None` is given as input
-                                (default value), `is_const`
-                                is used.
+                                Defaultly, `is_const` is used,
+                                i.e. constants must be
+                                in uppercase and not
+                                start with an underscore
+                                character.
+            allow_constants_only: When true, raises an
+                                  `AttributeError` if an
+                                  attribute which doe not
+                                  suffice `constant_identifier`
+                                  is defined under the
+                                  class.
+
         """
         const_class = super().__new__(cls, name, bases, dct)
 
-        if constant_identifier is None:
-            cls._is_const = is_const
-        else:
-            cls._is_const = constant_identifier
+        cls._class_function_cache[const_class] = constant_identifier
 
-        constants = {name for name in dir(const_class) if cls._is_const(name)}
+        constants = {
+            name
+            for name in dir(const_class)
+            if constant_identifier(name)
+        }
         cls._class_constant_cache[const_class] = constants
         return const_class
 
-    def __getitem__(cls, item: str) -> Any:
-        """Utility for accessing constant value by its name."""
+    def __getitem__(
+            cls,
+            item: str
+    ) -> Any:
+        """Access a constant value by its name."""
         class_constants = ConstClassMeta._class_constant_cache[cls]
         if item in class_constants:
             return getattr(cls, item)
@@ -90,6 +105,7 @@ class ConstClassMeta(type):
         """
         super().__setattr__(name, value)
         class_constants = ConstClassMeta._class_constant_cache[cls]
+        is_const = ConstClassMeta._class_function_cache[cls]
 
         if is_const(name) and name not in class_constants:
             class_constants.add(name)

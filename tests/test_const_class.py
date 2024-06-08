@@ -51,7 +51,8 @@ def fake_module():
 def test_const_class_cache(sample_const_class, sample_const_class2):
     expected_cache = {
         sample_const_class: {'PI', 'E', 'NA'},
-        sample_const_class2: {'FUNC_DEFINITION', 'CLASS_DEFINITION', 'IF_STATEMENT'}
+        sample_const_class2: {'FUNC_DEFINITION',
+                              'CLASS_DEFINITION', 'IF_STATEMENT'}
     }
     assert ConstClassMeta._class_constant_cache[sample_const_class] == expected_cache[sample_const_class]
     assert ConstClassMeta._class_constant_cache[sample_const_class2] == expected_cache[sample_const_class2]
