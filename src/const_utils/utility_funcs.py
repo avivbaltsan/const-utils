@@ -1,7 +1,9 @@
 """Constant-related utility functions."""
 
+from __future__ import annotations
+
 import inspect
-from typing import Any, Dict, Callable
+from typing import Any, Callable
 
 
 def is_const(name: str) -> bool:
@@ -17,7 +19,7 @@ def is_const(name: str) -> bool:
 def access_namespace_consts(
     constant_identifier: Callable[[str], bool] = is_const,
     local: bool = False,
-) -> Dict[str, Any]:
+) -> dict[str, Any]:
     """Access all constants within the caller namespace.
     A constant is any attribute name for which
     `constant_identifier(<attribute>)` is True.

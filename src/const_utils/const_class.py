@@ -2,11 +2,9 @@
 
 import importlib
 import inspect
-from typing import Any, Callable, Dict, List, Set, TypeVar
+from typing import Any, Callable
 
 from .utility_funcs import is_const
-
-T = TypeVar('T', covariant=True)
 
 
 class ConstClassMeta(type):
@@ -42,8 +40,8 @@ class ConstClassMeta(type):
     using `BaseConstClass` is preferred.
     """
 
-    _class_constant_cache: Dict['ConstClassMeta', Set[str]] = {}
-    _class_function_cache: Dict['ConstClassMeta', Callable[[str], bool]] = {}
+    _class_constant_cache: dict['ConstClassMeta', set[str]] = {}
+    _class_function_cache: dict['ConstClassMeta', Callable[[str], bool]] = {}
 
     def __new__(
         cls,
@@ -120,7 +118,7 @@ class ConstClassMeta(type):
         if name in class_constants:
             class_constants.remove(name)
 
-    def as_dict(cls) -> Dict[str, Any]:
+    def as_dict(cls) -> dict[str, Any]:
         """Return a dictionary representation of the
         constants within the class.
         """
@@ -131,12 +129,12 @@ class ConstClassMeta(type):
         }
 
     @property
-    def const_names(cls) -> List[str]:
+    def const_names(cls) -> list[str]:
         """Return a list of all constant names."""
         return list(cls.as_dict())
 
     @property
-    def const_values(cls) -> List[Any]:
+    def const_values(cls) -> list[Any]:
         """Return a list of all constant values."""
         return list(cls.as_dict().values())
 
